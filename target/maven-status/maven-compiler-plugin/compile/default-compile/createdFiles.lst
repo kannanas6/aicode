@@ -1,0 +1,11 @@
+com\kannan\ai\repository\ActorRepository.class
+com\kannan\ai\controller\ActorandMovieController.class
+com\kannan\ai\model\Actor.class
+com\kannan\ai\model\Movie.class
+com\kannan\ai\service\ActorService.class
+com\kannan\ai\model\Book.class
+com\kannan\ai\service\BookService.class
+com\kannan\ai\controller\controller.class
+com\kannan\ai\model\ActorHomeId.class
+com\kannan\ai\AiApplication.class
+com\kannan\ai\repository\BookRepository.class
