@@ -34,6 +34,11 @@ public class Document {
     @Column(name = "file_data", columnDefinition = "LONGBLOB")
     private byte[] fileData;
 
+    // Stores the text extracted from the PDF via Apache PDFBox
+    @Lob
+    @Column(name = "extracted_text", columnDefinition = "LONGTEXT")
+    private String extractedText;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime uploadedAt;
 

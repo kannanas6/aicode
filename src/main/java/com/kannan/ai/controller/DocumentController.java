@@ -1,7 +1,8 @@
 package com.kannan.ai.controller;
 
-import com.kannan.ai.dto.DocumentResponse;
+
 import com.kannan.ai.entity.Document;
+import com.kannan.ai.model.DocumentResponse;
 import com.kannan.ai.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;

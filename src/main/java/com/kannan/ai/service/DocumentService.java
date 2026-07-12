@@ -1,7 +1,7 @@
 package com.kannan.ai.service;
 
-import com.kannan.ai.dto.DocumentResponse;
 import com.kannan.ai.entity.Document;
+import com.kannan.ai.model.DocumentResponse;
 import com.kannan.ai.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +15,7 @@ import java.util.List;
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
+    private final PdfTextExtractorService pdfTextExtractorService;
 
     public DocumentResponse uploadDocument(MultipartFile file) {
         if (file.isEmpty()) {
@@ -27,13 +28,19 @@ public class DocumentService {
         }
 
         try {
+            // 1. Extract text from the PDF
+            String extractedText = pdfTextExtractorService.extractText(file);
+            System.out.println("Extracted text length: " + extractedText.length());
+            // 2. Build entity with both PDF bytes and extracted text
             Document document = Document.builder()
                     .fileName(file.getOriginalFilename())
                     .fileType(contentType)
                     .fileSize(file.getSize())
                     .fileData(file.getBytes())
+                    .extractedText(extractedText)
                     .build();
 
+            // 3. Save PDF + extracted text together
             Document saved = documentRepository.save(document);
             return toResponse(saved);
         } catch (IOException e) {
@@ -66,6 +73,7 @@ public class DocumentService {
                 .fileName(document.getFileName())
                 .fileType(document.getFileType())
                 .fileSize(document.getFileSize())
+                .extractedText(document.getExtractedText())
                 .uploadedAt(document.getUploadedAt())
                 .build();
     }

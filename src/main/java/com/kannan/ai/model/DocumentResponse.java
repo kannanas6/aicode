@@ -1,4 +1,4 @@
-package com.kannan.ai.dto;
+package com.kannan.ai.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,5 +16,6 @@ public class DocumentResponse {
     private String fileName;
     private String fileType;
     private Long fileSize;
+    private String extractedText;
     private LocalDateTime uploadedAt;
 }
