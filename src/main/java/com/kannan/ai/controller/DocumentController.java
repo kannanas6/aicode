@@ -2,6 +2,7 @@ package com.kannan.ai.controller;
 
 
 import com.kannan.ai.entity.Document;
+import com.kannan.ai.model.DocumentChunkResponse;
 import com.kannan.ai.model.DocumentResponse;
 import com.kannan.ai.service.DocumentService;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,19 @@ public class DocumentController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + document.getFileName() + "\"")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(document.getFileData());
+    }
+
+    // Fetch just the extracted text content of a document
+    @GetMapping("/{id}/text")
+    public ResponseEntity<String> getExtractedText(@PathVariable Long id) {
+        Document document = documentService.getDocumentById(id);
+        return ResponseEntity.ok(document.getExtractedText());
+    }
+
+    // Fetch all chunks for a document
+    @GetMapping("/{id}/chunks")
+    public ResponseEntity<List<DocumentChunkResponse>> getChunks(@PathVariable Long id) {
+        return ResponseEntity.ok(documentService.getChunksByDocumentId(id));
     }
 
     @DeleteMapping("/{id}")

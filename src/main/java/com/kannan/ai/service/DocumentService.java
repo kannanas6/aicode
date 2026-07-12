@@ -1,13 +1,18 @@
 package com.kannan.ai.service;
 
+
 import com.kannan.ai.entity.Document;
+import com.kannan.ai.entity.DocumentChunk;
+import com.kannan.ai.model.DocumentChunkResponse;
 import com.kannan.ai.model.DocumentResponse;
+import com.kannan.ai.repository.DocumentChunkRepository;
 import com.kannan.ai.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -15,7 +20,9 @@ import java.util.List;
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
+    private final DocumentChunkRepository documentChunkRepository;
     private final PdfTextExtractorService pdfTextExtractorService;
+    private final TextChunkService textChunkService;
 
     public DocumentResponse uploadDocument(MultipartFile file) {
         if (file.isEmpty()) {
@@ -30,8 +37,11 @@ public class DocumentService {
         try {
             // 1. Extract text from the PDF
             String extractedText = pdfTextExtractorService.extractText(file);
-            System.out.println("Extracted text length: " + extractedText.length());
-            // 2. Build entity with both PDF bytes and extracted text
+
+            // 2. Split extracted text into overlapping chunks
+            List<String> chunks = textChunkService.chunkText(extractedText);
+
+            // 3. Build entity with both PDF bytes and extracted text
             Document document = Document.builder()
                     .fileName(file.getOriginalFilename())
                     .fileType(contentType)
@@ -40,8 +50,20 @@ public class DocumentService {
                     .extractedText(extractedText)
                     .build();
 
-            // 3. Save PDF + extracted text together
+            // 4. Save the document first so we have its generated id
             Document saved = documentRepository.save(document);
+
+            // 5. Save all chunks, linked to the saved document's id
+            List<DocumentChunk> documentChunks = new ArrayList<>();
+            for (int i = 0; i < chunks.size(); i++) {
+                documentChunks.add(DocumentChunk.builder()
+                        .documentId(saved.getId())
+                        .chunkIndex(i + 1)
+                        .content(chunks.get(i))
+                        .build());
+            }
+            documentChunkRepository.saveAll(documentChunks);
+
             return toResponse(saved);
         } catch (IOException e) {
             throw new RuntimeException("Failed to read PDF file bytes", e);
@@ -65,6 +87,19 @@ public class DocumentService {
             throw new RuntimeException("Document not found with id: " + id);
         }
         documentRepository.deleteById(id);
+    }
+
+    public List<DocumentChunkResponse> getChunksByDocumentId(Long documentId) {
+        if (!documentRepository.existsById(documentId)) {
+            throw new RuntimeException("Document not found with id: " + documentId);
+        }
+        return documentChunkRepository.findByDocumentIdOrderByChunkIndexAsc(documentId)
+                .stream()
+                .map(chunk -> DocumentChunkResponse.builder()
+                        .chunkIndex(chunk.getChunkIndex())
+                        .content(chunk.getContent())
+                        .build())
+                .toList();
     }
 
     private DocumentResponse toResponse(Document document) {
